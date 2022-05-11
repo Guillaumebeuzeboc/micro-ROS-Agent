@@ -4,9 +4,7 @@ version: git
 summary: Bridge between Micro ROS client applications and ROS 2
 description: |
   Micro-ROS, whose default implementation is based on eProsima's
-  Micro XRCE-DDS middleware, is composed of client applications
-  which interact with the ROS 2 world by means of an Agent.
-  This agent keeps tracks of the entities created by means of
+  Micro XRCE-DDS middleware, is composed of client applications which interact with the ROS 2 world by means of an Agent.  This agent keeps tracks of the entities created by means of
   requests performed on the microcontroller side, and uses them
   to communicate with the ROS 2 dataspace.
 
@@ -121,20 +119,22 @@ architectures:
   - build-on: ppc64el
 
 parts:
-
   uros-agent:
     plugin: colcon
     source: .
-    override-build: |
-        set +u
+    override-pull: |
+        #snapcraftctl pull
+        rm -Rf *
         git clone https://github.com/eProsima/Micro-XRCE-DDS-Agent.git -b $ROS_DISTRO
         git clone https://github.com/eProsima/Micro-CDR.git -b $ROS_DISTRO
         git clone https://github.com/micro-ROS/micro_ros_msgs.git -b $ROS_DISTRO
         git clone https://github.com/micro-ROS/rosidl_typesupport_microxrcedds.git -b $ROS_DISTRO
         git clone https://github.com/micro-ROS/rmw-microxrcedds.git -b $ROS_DISTRO
         git clone https://github.com/micro-ROS/micro-ROS-Agent.git -b $ROS_DISTRO
+    override-build: |
+        set +u
         . /opt/ros/$ROS_DISTRO/setup.sh
-        colcon build --merge-install --install-base $SNAPCRAFT_PRIME --cmake-args "-DUAGENT_BUILD_EXECUTABLE=OFF -DUAGENT_USE_SYSTEM_FASTDDS=ON" --packages-up-to micro_ros_agent
+        colcon build --merge-install --base-paths "${SNAPCRAFT_PART_SRC_WORK}" --build-base "${SNAPCRAFT_PART_BUILD}" --install-base "${SNAPCRAFT_PART_INSTALL}"/opt/ros/snap --cmake-args "-DUAGENT_BUILD_EXECUTABLE=OFF -DUAGENT_USE_SYSTEM_FASTDDS=ON" --packages-up-to micro_ros_agent
         set -u
     build-packages: [make, gcc, g++]
     stage-packages: [ros-foxy-ros2launch]
@@ -143,21 +143,17 @@ parts:
     plugin: dump
     source: snap/local/
     organize:
-      '*': usr/bin/
-
-plugs:
-  micro-ros-agent-shm-netplug:
-    interface: system-files
-    allow-auto-connection: true
-    write:
-      - /dev/shm
+      'micro-ros-agent-daemon': usr/bin/
+      'fastdds_no_shared_memory.xml': usr/share/
 
 apps:
   micro-ros-agent:
-    command: lib/micro_ros_agent/micro_ros_agent
+    command: opt/ros/snap/lib/micro_ros_agent/micro_ros_agent
     environment:
         LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/lib"
-    plugs: [network, network-bind, serial-port, micro-ros-agent-shm-netplug]
+        #FASTRTPS_DEFAULT_PROFILES_FILE: ${SNAP_DATA}/fastdds_no_shared_memory.xml
+        FASTRTPS_DEFAULT_PROFILES_FILE: ${SNAP}/usr/share/fastdds_no_shared_memory.xml
+    plugs: [network, network-bind, serial-port]
     extensions: [ros2-foxy]
 
   daemon:
@@ -165,4 +161,4 @@ apps:
     environment:
         LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/lib"
     daemon: simple
-    plugs: [network, network-bind, serial-port, micro-ros-agent-shm-netplug]
+    plugs: [network, network-bind, serial-port]
