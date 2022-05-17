@@ -114,14 +114,14 @@ parts:
     source: .
     override-pull: |
         snapcraftctl pull
-        vcs import < snap/local/dependencies.yaml
+        [ ! -d Micro-XRCE-DDS-Agent ] && git clone https://github.com/eProsima/Micro-XRCE-DDS-Agent.git -b $ROS_DISTRO
         # Place additional colcon.pkg for correct topological order
         mv snap/local/micro_ros_agent_colcon.pkg micro_ros_agent/colcon.pkg
     colcon-cmake-args:
       - -DUAGENT_BUILD_EXECUTABLE=OFF
       - -DUAGENT_USE_SYSTEM_FASTDDS=ON
       - -DMICROROSAGENT_SUPERBUILD=OFF
-    build-packages: [make, gcc, g++, python3-vcstool]
+    build-packages: [make, gcc, g++]
     stage-packages: [ros-foxy-ros2launch]
 
   runner:
