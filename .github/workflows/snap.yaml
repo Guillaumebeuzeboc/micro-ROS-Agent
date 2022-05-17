@@ -30,7 +30,7 @@ jobs:
 
     # @todo Do some testing with the snap
     - run: |
-        micro_ros_agent --help
+        micro-ros-agent --help
 
     # - uses: snapcore/action-publish@v1
     #   with:
