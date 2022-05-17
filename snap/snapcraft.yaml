@@ -69,16 +69,6 @@ description: |
 
         $ snap set micro-ros-agent device="device path"
 
-  If connecting the micro-ROS Agent using an IP based connection mode,
-  that is, `udp4`, `udp6`, `tcp4` or `tcp6`, care must be taken to
-  connect first the `micro-ros-agent-shm-netplug` plug.
-  This is due to the fact that ROS 2 Foxy is using Fast-DDS as the
-  default DDS middleware, and Fast-DDS comes with *shared memory transport*.
-  Thus, this plugin must be enabled, in order to gain access to the
-  `/dev/shm` folder from the snap image, prior to running it:
-
-      $ sudo snap connect micro-ros-agent:micro-ros-agent-shm-netplug
-
   When using the snap with a serial device, some steps need to be taken
   in order to establish a successful connection:
 
@@ -123,20 +113,15 @@ parts:
     plugin: colcon
     source: .
     override-pull: |
-        #snapcraftctl pull
-        rm -Rf *
-        git clone https://github.com/eProsima/Micro-XRCE-DDS-Agent.git -b $ROS_DISTRO
-        git clone https://github.com/eProsima/Micro-CDR.git -b $ROS_DISTRO
-        git clone https://github.com/micro-ROS/micro_ros_msgs.git -b $ROS_DISTRO
-        git clone https://github.com/micro-ROS/rosidl_typesupport_microxrcedds.git -b $ROS_DISTRO
-        git clone https://github.com/micro-ROS/rmw-microxrcedds.git -b $ROS_DISTRO
-        git clone https://github.com/micro-ROS/micro-ROS-Agent.git -b $ROS_DISTRO
-    override-build: |
-        set +u
-        . /opt/ros/$ROS_DISTRO/setup.sh
-        colcon build --merge-install --base-paths "${SNAPCRAFT_PART_SRC_WORK}" --build-base "${SNAPCRAFT_PART_BUILD}" --install-base "${SNAPCRAFT_PART_INSTALL}"/opt/ros/snap --cmake-args "-DUAGENT_BUILD_EXECUTABLE=OFF -DUAGENT_USE_SYSTEM_FASTDDS=ON" --packages-up-to micro_ros_agent
-        set -u
-    build-packages: [make, gcc, g++]
+        snapcraftctl pull
+        vcs import < snap/local/dependencies.yaml
+        # Place additional colcon.pkg for correct topological order
+        mv snap/local/micro_ros_agent_colcon.pkg micro_ros_agent/colcon.pkg
+    colcon-cmake-args:
+      - -DUAGENT_BUILD_EXECUTABLE=OFF
+      - -DUAGENT_USE_SYSTEM_FASTDDS=ON
+      - -DMICROROSAGENT_SUPERBUILD=OFF
+    build-packages: [make, gcc, g++, python3-vcstool]
     stage-packages: [ros-foxy-ros2launch]
 
   runner:
@@ -150,8 +135,6 @@ apps:
   micro-ros-agent:
     command: opt/ros/snap/lib/micro_ros_agent/micro_ros_agent
     environment:
-        LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/lib"
-        #FASTRTPS_DEFAULT_PROFILES_FILE: ${SNAP_DATA}/fastdds_no_shared_memory.xml
         FASTRTPS_DEFAULT_PROFILES_FILE: ${SNAP}/usr/share/fastdds_no_shared_memory.xml
     plugs: [network, network-bind, serial-port]
     extensions: [ros2-foxy]
@@ -159,6 +142,7 @@ apps:
   daemon:
     command: usr/bin/micro-ros-agent-daemon
     environment:
-        LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/lib"
+        FASTRTPS_DEFAULT_PROFILES_FILE: ${SNAP}/usr/share/fastdds_no_shared_memory.xml
     daemon: simple
     plugs: [network, network-bind, serial-port]
+    extensions: [ros2-foxy]
