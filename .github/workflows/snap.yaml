@@ -55,4 +55,4 @@ jobs:
       with:
         store_login: ${{ secrets.STORE_LOGIN }}
         snap: ${{needs.build.outputs.snap-file}}
-        release: ${{ (startsWith(github.ref, 'refs/tags/v')) && "stable" || "edge"}}
+        release: ${{ (startsWith(github.ref, 'refs/tags/v')) && 'stable' || 'edge'}}
