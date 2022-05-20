@@ -1,5 +1,7 @@
 name: snap
 on:
+  release:
+    types: [created]
   push:
     branches:
       - foxy
@@ -55,4 +57,4 @@ jobs:
       with:
         store_login: ${{ secrets.STORE_LOGIN }}
         snap: ${{needs.build.outputs.snap-file}}
-        release: ${{ (startsWith(github.ref, 'refs/tags/')) && 'stable' || 'edge'}}
+        release: ${{ (github.event_name == 'release' && github.event.action == 'created')) && 'stable' || 'edge'}}
