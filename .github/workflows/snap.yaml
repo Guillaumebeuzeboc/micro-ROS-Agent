@@ -57,4 +57,4 @@ jobs:
       with:
         store_login: ${{ secrets.STORE_LOGIN }}
         snap: ${{needs.build.outputs.snap-file}}
-        release: ${{ (github.event_name == 'release' && github.event.action == 'created')) && 'stable' || 'edge'}}
+        release: ${{ (github.event_name == 'release' && github.event.action == 'created') && 'stable' || 'edge'}}
