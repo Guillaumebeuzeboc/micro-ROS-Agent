@@ -43,6 +43,21 @@ Before using it in a safety relevant setting, make sure that the software
 fulfills your requirements and adjust it according to any applicable safety
 standards, e.g., ISO 26262.
 
+## Installation
+
+### From source
+
+### From sna
+
+For the last release
+
+`sudo snap install micro-ros-agent`
+
+For the last upstream
+
+`sudo snap install micro-ros-agent --edge`
+
+
 ## License
 
 This repository is open-sourced under the Apache-2.0 license. See the [LICENSE](LICENSE) file for details.
