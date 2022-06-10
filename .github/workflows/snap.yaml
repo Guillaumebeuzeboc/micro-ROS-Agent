@@ -26,6 +26,9 @@ jobs:
       with:
         arch: ${{ matrix.architecture }}
         distro: ubuntu_latest
+      run: |
+        sudo apt update
+        sudo apt upgrade -y
     - uses: snapcore/action-build@v1
       id: build-snap
       with:
