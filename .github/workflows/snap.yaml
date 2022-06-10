@@ -18,10 +18,14 @@ jobs:
     strategy:
       matrix:
         architecture:
-        - linux/amd64
-        - linux/arm64
+        - amd64
+        - aarch64
     steps:
     - uses: actions/checkout@v2
+    - uses: uraimo/run-on-arch-action@v2
+      with:
+        arch: ${{ matrix.architecture }}
+        distro: ubuntu_latest
     - uses: snapcore/action-build@v1
       id: build-snap
       with:
