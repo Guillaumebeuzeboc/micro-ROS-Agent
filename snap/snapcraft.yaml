@@ -1,6 +1,6 @@
 name: micro-ros-agent
-base: core20
-version: git
+adopt-info: uros-agent # parse metadata from the uros-agent part
+base: core22
 summary: Bridge between Micro ROS client applications and ROS 2
 description: |
   Micro-ROS, whose default implementation is based on eProsima's
@@ -101,7 +101,6 @@ description: |
   After this, you can execute your snap as usual,
   using `sudo micro-ros-agent serial -d <serial-dev>`.
 
-grade: stable
 confinement: strict
 
 architectures:
@@ -110,22 +109,7 @@ architectures:
   - build-on: armhf
   - build-on: ppc64el
 
-package-repositories:
-- components: [main]
-  formats: [deb]
-  key-id: C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
-  key-server: keyserver.ubuntu.com
-  suites: [focal]
-  type: apt
-  url: http://repo.ros2.org/ubuntu/main
-
 parts:
-  ros2-foxy-extension:
-    build-packages: [ros-foxy-ros-core]
-    override-build: install -D -m 0755 launch ${SNAPCRAFT_PART_INSTALL}/snap/command-chain/ros2-launch
-    plugin: nil
-    source: $SNAPCRAFT_EXTENSIONS_DIR/ros2
-
   uros-agent:
     plugin: colcon
     source: .
@@ -140,11 +124,8 @@ parts:
         snapcraftctl set-version "$version"
         snapcraftctl set-grade "$grade"
 
-    build-packages: [make, gcc, g++]
-    stage-packages: [ros-foxy-ros2launch]
-    build-environment:
-    - ROS_VERSION: '2'
-    - ROS_DISTRO: foxy
+    build-packages: [make, gcc, g++, git]
+    stage-packages: [ros-humble-ros2launch]
 
   runner:
     plugin: dump
@@ -159,6 +140,7 @@ apps:
     environment:
         FASTRTPS_DEFAULT_PROFILES_FILE: ${SNAP}/usr/share/fastdds_no_shared_memory.xml
     plugs: [network, network-bind, serial-port]
+    extensions: [ros2-humble]
 
   daemon:
     command: usr/bin/micro-ros-agent-daemon
@@ -166,3 +148,5 @@ apps:
         FASTRTPS_DEFAULT_PROFILES_FILE: ${SNAP}/usr/share/fastdds_no_shared_memory.xml
     daemon: simple
     plugs: [network, network-bind, serial-port]
+    extensions: [ros2-humble]
+
